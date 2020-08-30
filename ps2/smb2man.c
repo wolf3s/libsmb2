@@ -37,12 +37,18 @@
 #include <thsemap.h>
 #include <netman.h>
 #include <netman_rpc.h>
+#include <iomanX.h>
+#include "smb2_fio.h"
 
 #include "compat.h"
-
 #include "smb2.h"
 #include "libsmb2.h"
-#include "libsmb2-private.h"
+
+#define MODNAME         "smb2man"
+#define VER_MAJOR       1
+#define VER_MINOR       0
+
+IRX_ID(MODNAME, VER_MAJOR, VER_MINOR);
 
 int _start(int argc, char** argv)
 {
@@ -50,6 +56,7 @@ int _start(int argc, char** argv)
         /*
          * Stuff goes here
          */
+        SMB2_initdev();
 
 	return MODULE_RESIDENT_END;
 }

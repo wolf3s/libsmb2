@@ -6,6 +6,7 @@ IOP_CFLAGS += -Wall -Os -I. -I../include -I../include/smb2 -I../lib
 IOP_BIN = libsmb2.irx
 IOP_LIB = libsmb2.a
 IOP_OBJS =  smb2man.o \
+            smb2_fio.o \
             imports.o \
             \
             ../lib/aes.o \

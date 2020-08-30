@@ -57,5 +57,7 @@ I_GetSystemTime
 I_SysClock2USec
 thbase_IMPORTS_end
 
-
-
+thsemap_IMPORTS_start
+I_CreateSema
+I_DeleteSema
+thsemap_IMPORTS_end
