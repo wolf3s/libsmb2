@@ -50,6 +50,7 @@ struct MinList __filelist = { (struct MinNode *) &__filelist.mlh_Tail, NULL, (st
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <proto/exec.h>
 
 #endif
 
@@ -311,11 +312,9 @@ ssize_t readv (int fd, const struct iovec *vector, int count)
 #endif
 
 #ifdef NEED_POLL
-#if defined(__amigaos4__) || defined(__AMIGA__) || defined(__AROS__)
-#include <proto/exec.h>
 int poll(struct pollfd *fds, unsigned int nfds, int timo)
 {
-        struct timeval timeout, *toptr = 0;
+        struct timeval timeout, *toptr;
         fd_set ifds, ofds, efds, *ip, *op;
         unsigned int i, maxfd = 0;
         int  rc;
@@ -323,6 +322,7 @@ int poll(struct pollfd *fds, unsigned int nfds, int timo)
         FD_ZERO(&ifds);
         FD_ZERO(&ofds);
         FD_ZERO(&efds);
+#if defined(__amigaos4__) || defined(__AMIGA__) || defined(__AROS__)
         op = ip = 0;
         for (i = 0; i < nfds; ++i) {
                 int fd = fds[i].fd;
@@ -341,18 +341,58 @@ int poll(struct pollfd *fds, unsigned int nfds, int timo)
                 if (fd > maxfd) {
                         maxfd = fd;
                 }
+        }
+#else
+        for (i = 0, op = ip = 0; i < nfds; ++i) {
+                fds[i].revents = 0;
+                if(fds[i].events & (POLLIN|POLLPRI)) {
+                        ip = &ifds;
+                        FD_SET(fds[i].fd, ip);
+                }
+                if(fds[i].events & POLLOUT)  {
+                        op = &ofds;
+                        FD_SET(fds[i].fd, op);
+                }
+                FD_SET(fds[i].fd, &efds);
+                if (fds[i].fd > maxfd) {
+                        maxfd = fds[i].fd;
+                }
         } 
+#endif
 
+#if defined(__amigaos4__) || defined(__AMIGA__) || defined(__AROS__)
         if(timo >= 0) {
                 toptr = &timeout;
                 timeout.tv_sec = (unsigned)timo / 1000;
                 timeout.tv_usec = ((unsigned)timo % 1000) * 1000;
         }
 
+#else
+        if(timo < 0) {
+                toptr = NULL;
+        } else {
+#if defined(PS2_EE_PLATFORM) && defined(PS2IPS)                
+                /*
+                 * select() is broken on the ps2ips stack so we basically have
+                 * to busy-wait.
+                 */
+                (void)timeout;
+                timeout.tv_sec = 0;
+                timeout.tv_usec = 10000;        
+#else
+                toptr = &timeout;
+                timeout.tv_sec = timo / 1000;
+                timeout.tv_usec = (timo - timeout.tv_sec * 1000) * 1000;
+#endif        
+#endif
+        }
+
         rc = select(maxfd + 1, ip, op, &efds, toptr);
+
         if(rc <= 0)
                 return rc;
 
+#if defined(__amigaos4__) || defined(__AMIGA__) || defined(__AROS__)
         rc = 0;
         for (i = 0; i < nfds; ++i) {
                 int fd = fds[i].fd;
@@ -371,58 +411,7 @@ int poll(struct pollfd *fds, unsigned int nfds, int timo)
                         rc++;
                 }
         }
-        return rc;
-}
 #else
-int poll(struct pollfd *fds, unsigned int nfds, int timo)
-{
-        struct timeval timeout, *toptr;
-        fd_set ifds, ofds, efds, *ip, *op;
-        unsigned int i, maxfd = 0;
-        int  rc;
-
-        FD_ZERO(&ifds);
-        FD_ZERO(&ofds);
-        FD_ZERO(&efds);
-        for (i = 0, op = ip = 0; i < nfds; ++i) {
-                fds[i].revents = 0;
-                if(fds[i].events & (POLLIN|POLLPRI)) {
-                        ip = &ifds;
-                        FD_SET(fds[i].fd, ip);
-                }
-                if(fds[i].events & POLLOUT)  {
-                        op = &ofds;
-                        FD_SET(fds[i].fd, op);
-                }
-                FD_SET(fds[i].fd, &efds);
-                if (fds[i].fd > maxfd) {
-                        maxfd = fds[i].fd;
-                }
-        } 
-
-        if(timo < 0) {
-                toptr = NULL;
-        } else {
-#if defined(PS2_EE_PLATFORM) && defined(PS2IPS)                
-                /*
-                 * select() is broken on the ps2ips stack so we basically have
-                 * to busy-wait.
-                 */
-                (void)timeout;
-                timeout.tv_sec = 0;
-                timeout.tv_usec = 10000;        
-#else
-                toptr = &timeout;
-                timeout.tv_sec = timo / 1000;
-                timeout.tv_usec = (timo - timeout.tv_sec * 1000) * 1000;
-#endif        
-        }
-
-        rc = select(maxfd + 1, ip, op, &efds, toptr);
-
-        if(rc <= 0)
-                return rc;
-
         if(rc > 0)  {
                 for (i = 0; i < nfds; ++i) {
                         int fd = fds[i].fd;
@@ -434,9 +423,9 @@ int poll(struct pollfd *fds, unsigned int nfds, int timo)
                                 fds[i].revents |= POLLHUP;
                 }
         }
+#endif
         return rc;
 }
-#endif
 #endif
 
 #ifdef NEED_STRDUP
