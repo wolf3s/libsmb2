@@ -92,6 +92,19 @@
 #endif
 #endif /* __ANDROID__ */
 
+#if defined(__amigaos4__) || defined(__AMIGA__) || defined(__AROS__)
+#include <errno.h>
+#define getlogin_r(a,b) ENXIO
+#ifndef __AROS__
+#define srandom srand
+#define random rand
+#endif
+#ifndef __amigaos4__
+#include <proto/bsdsocket.h>
+#define close CloseSocket
+#endif
+#endif // __amigaos4__
+
 static int
 smb2_parse_args(struct smb2_context *smb2, const char *args)
 {
@@ -204,8 +217,11 @@ struct smb2_url *smb2_parse_url(struct smb2_context *smb2, const char *url)
                 smb2_set_error(smb2, "URL is too long");
                 return NULL;
         }
+#if defined(__amigaos4__) || defined(__AMIGA__) || defined(__AROS__)
+        strcpy(str, url + 6);
+#else
         strncpy(str, url + 6, MAX_URL_SIZE);
-
+#endif
         args = strchr(str, '?');
         if (args) {
                 *(args++) = '\0';
@@ -494,7 +510,7 @@ void smb2_set_security_mode(struct smb2_context *smb2, uint16_t security_mode)
         smb2->security_mode = security_mode;
 }
 
-#if !defined(_XBOX) && !defined(PS2_IOP_PLATFORM)
+#if !defined(PS2_IOP_PLATFORM) && !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_XBOX)
 static void smb2_set_password_from_file(struct smb2_context *smb2)
 {
         char *name = NULL;
@@ -582,7 +598,7 @@ void smb2_set_user(struct smb2_context *smb2, const char *user)
                 return;
         }
         smb2->user = strdup(user);
-#if !defined(_XBOX) && !defined(PS2_IOP_PLATFORM)
+#if !defined(PS2_IOP_PLATFORM) && !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_XBOX)
         smb2_set_password_from_file(smb2);
 #endif
 }

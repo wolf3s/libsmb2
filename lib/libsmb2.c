@@ -72,9 +72,17 @@
 #include <sys/socket.h>
 #endif
 
-#if defined(_WIN32) || defined(_XBOX)
+#if defined(_WIN32) || defined(_XBOX) || defined(__AROS__)
 #include "asprintf.h"
 #endif
+
+#if !defined(__amigaos4__) && (defined(__AMIGA__) || defined(__AROS__))
+#include <proto/bsdsocket.h>
+#undef getaddrinfo
+#undef freeaddrinfo
+#define close CloseSocket
+#endif
+
 
 #include "compat.h"
 

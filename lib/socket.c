@@ -28,6 +28,16 @@
 #define HAVE_SYS_SOCKET_H 1
 #endif
 
+#if !defined(__amigaos4__) && (defined(__AMIGA__) || defined(__AROS__))
+#include <sys/ioctl.h>
+#include <proto/bsdsocket.h>
+#undef getaddrinfo
+#undef freeaddrinfo
+#undef HAVE_UNISTD_H
+#define close CloseSocket
+#endif
+
+
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif
@@ -839,6 +849,9 @@ set_nonblocking(t_socket fd)
 #if defined(WIN32) || defined(_XBOX) || defined(PS2_EE_PLATFORM) && defined(PS2IPS)
         unsigned long opt = 1;
         ioctlsocket(fd, FIONBIO, &opt);
+#elif (defined(__AMIGA__) || defined(__AROS__)) && !defined(__amigaos4__)
+        unsigned long opt = 0;
+        IoctlSocket(fd, FIONBIO, (char *)&opt);		
 #else
         unsigned v;
         v = fcntl(fd, F_GETFL, 0);
@@ -887,7 +900,7 @@ connect_async_ai(struct smb2_context *smb2, const struct addrinfo *ai, int *fd_o
                 ((struct sockaddr_in *)&ss)->sin_len = socksize;
 #endif
                 break;
-#ifndef _XBOX
+#ifdef AF_INET6
         case AF_INET6:
 #if !defined(PICO_PLATFORM) || defined(LWIP_INETV6)
                 socksize = sizeof(struct sockaddr_in6);
@@ -896,8 +909,8 @@ connect_async_ai(struct smb2_context *smb2, const struct addrinfo *ai, int *fd_o
                 ((struct sockaddr_in6 *)&ss)->sin6_len = socksize;
 #endif
 #endif
-#endif
                 break;
+#endif
         default:
                 smb2_set_error(smb2, "Unknown address family :%d. "
                                 "Only IPv4/IPv6 supported so far.",
