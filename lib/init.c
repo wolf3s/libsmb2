@@ -71,7 +71,9 @@
 #define getlogin_r(a,b) ENXIO
 #define srandom srand
 #define random rand
+#ifndef _XBOX
 #define getpid GetCurrentProcessId
+#endif
 #endif /* _MSC_VER */
 
 #ifdef ESP_PLATFORM
@@ -293,10 +295,12 @@ struct smb2_context *smb2_init_context(void)
         char buf[1024] _U_;
         int i, ret;
         static int ctr;
-
+#ifdef _XBOX
+        srandom(time(NULL) ^ ctr++);
+#else
         srandom(time(NULL) ^ getpid() ^ ctr++);
-
-        smb2 = calloc(1, sizeof(struct smb2_context));
+#endif
+		smb2 = calloc(1, sizeof(struct smb2_context));
         if (smb2 == NULL) {
                 return NULL;
         }
@@ -427,9 +431,12 @@ struct smb2_iovec *smb2_add_iovector(struct smb2_context *smb2,
 static void smb2_set_error_string(struct smb2_context *smb2, const char * error_string, va_list args)
 {
         char errstr[MAX_ERROR_SIZE] = {0};
-
-        if (vsnprintf(errstr, MAX_ERROR_SIZE, error_string, args) < 0) {
-                strncpy(errstr, "could not format error string!",
+#ifdef _XBOX
+        if (_vsnprintf(errstr, MAX_ERROR_SIZE, error_string, args) < 0) {
+#else
+	if (vsnprintf(errstr, MAX_ERROR_SIZE, error_string, args) < 0) {
+#endif
+			strncpy(errstr, "could not format error string!",
                         MAX_ERROR_SIZE);
         }
         strncpy(smb2->error_string, errstr, MAX_ERROR_SIZE);
@@ -487,7 +494,7 @@ void smb2_set_security_mode(struct smb2_context *smb2, uint16_t security_mode)
         smb2->security_mode = security_mode;
 }
 
-#ifndef PS2_IOP_PLATFORM
+#if !defined(_XBOX) && !defined(PS2_IOP_PLATFORM)
 static void smb2_set_password_from_file(struct smb2_context *smb2)
 {
         char *name = NULL;
@@ -575,7 +582,7 @@ void smb2_set_user(struct smb2_context *smb2, const char *user)
                 return;
         }
         smb2->user = strdup(user);
-#if !defined(PS2_IOP_PLATFORM)
+#if !defined(_XBOX) && !defined(PS2_IOP_PLATFORM)
         smb2_set_password_from_file(smb2);
 #endif
 }
