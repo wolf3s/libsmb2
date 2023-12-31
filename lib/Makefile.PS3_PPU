@@ -39,7 +39,7 @@ LIBS		:=
 
 MACHDEP		:= -DPS3_PPU_PLATFORM -DHAVE_CONFIG_H -DNEED_READV -DNEED_WRITEV -DNEED_GETADDRINFO -DNEED_FREEADDRINFO -D_U_=/**/
 
-CFLAGS		+= -O2 -Wall -mcpu=cell $(MACHDEP) -fno-strict-aliasing $(INCLUDES)
+CFLAGS		+= -O2 -Wall -mcpu=cell $(MACHDEP) -fno-strict-aliasing $(INCLUDES) 
 
 LD			:=	ppu-ld
 
