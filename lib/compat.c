@@ -117,7 +117,7 @@ void smb2_freeaddrinfo(struct addrinfo *res)
 
 #ifdef PS2_IOP_PLATFORM
 #include <sysclib.h>
-#include <thbase.h> /* time_t time(time_t *tLoc) */
+#include <thbase.h>
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -185,6 +185,8 @@ int iop_connect(int sockfd, struct sockaddr *addr, socklen_t addrlen)
 #ifdef PS3_PPU_PLATFORM
 
 #include <stdlib.h>
+#include <string.h>
+#include <netinet/in.h>
 
 #endif /* PS3_PPU_PLATFORM */
 
