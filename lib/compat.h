@@ -25,7 +25,7 @@
 #include <xtl.h>
 #include <winsockx.h>
 
-#ifdef XBOX_PLATFORM /* MSVC 2003 Doesn´t have stdint.h header */
+#ifdef XBOX_PLATFORM /* MSVC 2003 Doesnï¿½t have stdint.h header */
 typedef char int8_t;
 typedef short int16_t;
 typedef short int_least16_t;
@@ -39,8 +39,6 @@ typedef unsigned int uint32_t;
 typedef unsigned long long uint64_t;
 typedef unsigned int uint_t;
 typedef unsigned int uintptr_t;
-#else
-#include <stdint.h> /* XBOX 360 */
 #endif
 #include <errno.h>
 
@@ -149,7 +147,7 @@ void smb2_freeaddrinfo(struct addrinfo *res);
 /* just pretend they are the same so we compile */
 #define sockaddr_in6 sockaddr_in
 
-#endif //_XBOX
+#endif /* _XBOX */
 
 #ifdef PICO_PLATFORM
 
