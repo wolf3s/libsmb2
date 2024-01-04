@@ -206,7 +206,7 @@ smb2_close_context(struct smb2_context *smb2)
                 if (smb2->change_fd) {
                         smb2->change_fd(smb2, smb2->fd, SMB2_DEL_FD);
                 }
-				close(smb2->fd);
+                close(smb2->fd);
                 smb2->fd = -1;
         }
 
@@ -2558,7 +2558,7 @@ disconnect_cb_2(struct smb2_context *smb2, int status,
         if (smb2->change_fd) {
                 smb2->change_fd(smb2, smb2->fd, SMB2_DEL_FD);
         }
-		close(smb2->fd);
+        close(smb2->fd);
         smb2->fd = -1;
 }
 

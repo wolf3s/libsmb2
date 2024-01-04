@@ -40,6 +40,7 @@ typedef unsigned long long uint64_t;
 typedef unsigned int uint_t;
 typedef unsigned int uintptr_t;
 #endif
+
 #include <errno.h>
 
 #ifndef ENETRESET
