@@ -595,7 +595,7 @@ struct sockaddr_storage {
 
 #endif
 
-#ifdef PS4_PLATFORM
+#if defined(PS4_PLATFORM) || defined(PS5_PLATFORM)
 
 #ifndef ENODATA
 #define ENODATA 98

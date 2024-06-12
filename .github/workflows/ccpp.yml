@@ -109,6 +109,28 @@ jobs:
       run: |
         make -f Makefile.platform ps4_all clean
 
+  build-ps5:
+    name: PS5
+      
+    runs-on: ubuntu-22.04
+    steps:
+    - name: git checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Create Build Environment
+      run: >
+        sudo apt-get update &&
+        sudo apt-get install -y bash socat cmake pkg-config clang-15 lld-15 &&
+        wget https://github.com/ps5-payload-dev/sdk/releases/download/v0.14/ps5-payload-sdk.tar.gz &&
+        mkdir -p /opt/ps5-payload-sdk/ &&
+        tar xvf ps5-payload-sdk.tar.gz -C /opt/ps5-payload-sdk/
+        
+    - name: build libsmb2
+      run: |
+        make -f Makefile.platform ps5_all
+
   build-switch:
     name: SWITCH build
 
