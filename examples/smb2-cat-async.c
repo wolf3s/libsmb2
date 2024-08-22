@@ -14,7 +14,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #define _GNU_SOURCE
 
 #include <fcntl.h>
-#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__)
+#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER)
 #include <poll.h>
 #endif
 #include <stdint.h>
@@ -23,7 +23,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifdef _MSC_VER
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 
 #include "smb2.h"
 #include "libsmb2.h"
@@ -42,6 +46,12 @@ int poll(struct pollfd *fds, unsigned int nfds, int timo);
 int is_finished;
 uint8_t buf[256 * 1024];
 uint32_t pos;
+
+#ifdef _MSC_VER
+#define SMB2_STDOUT_FILENO _fileno(stdout)
+#else
+#define SMB2_STDOUT_FILENO STDOUT_FILENO
+#endif
 
 int usage(void)
 {
@@ -83,7 +93,7 @@ void pr_cb(struct smb2_context *smb2, int status,
                 return;
         }
 
-        write(STDOUT_FILENO, buf, status);
+        write(SMB2_STDOUT_FILENO, buf, status);
 
         pos += status;
         if (smb2_pread_async(smb2, fh, buf, 102400, pos, pr_cb, fh) < 0) {

@@ -14,7 +14,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #define _GNU_SOURCE
 
 #include <inttypes.h>
-#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__)
+#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER)
 #include <poll.h>
 #endif
 #include <stdint.h>

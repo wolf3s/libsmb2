@@ -14,7 +14,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #define _GNU_SOURCE
 
 #include <inttypes.h>
+#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER)
 #include <poll.h>
+#endif
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,6 +35,20 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 int is_finished;
 struct ndr_context_handle PolicyHandle;
+
+#ifdef __AROS__
+#include "asprintf.h"
+#endif
+
+#if defined(__amigaos4__) || defined(__AMIGA__) || defined(__AROS__)
+struct pollfd {
+    int fd;
+    short events;
+    short revents;
+};
+
+int poll(struct pollfd* fds, unsigned int nfds, int timo);
+#endif
 
 int usage(void)
 {

@@ -15,7 +15,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include <fcntl.h>
 #include <inttypes.h>
+#ifndef _MSC_VER
 #include <poll.h>
+#endif
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
