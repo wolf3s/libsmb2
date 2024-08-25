@@ -15,7 +15,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include <fcntl.h>
 #include <inttypes.h>
-#ifndef _MSC_VER
+#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER) && !defined(__PS2__) && !defined(GEKKO)
 #include <poll.h>
 #endif
 #include <stdint.h>
@@ -29,6 +29,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include "smb2.h"
 #include "libsmb2.h"
 #include "libsmb2-raw.h"
+#include "ex_compat.h"
 
 int usage(void)
 {
@@ -233,7 +234,11 @@ print_sid(struct smb2_sid *sid)
                 printf("-0x%012" PRIx64, ia);
         }
         for (i = 0; i < sid->sub_auth_count; i++) {
+#if defined(__PS2__) || defined(__3DS__)
+                printf("-%lu", sid->sub_auth[i]);
+#else
                 printf("-%u", sid->sub_auth[i]);
+#endif
         }
 }
 
@@ -248,7 +253,11 @@ print_ace(struct smb2_ace *ace)
         case SMB2_ACCESS_DENIED_ACE_TYPE:
         case SMB2_SYSTEM_AUDIT_ACE_TYPE:
         case SMB2_SYSTEM_MANDATORY_LABEL_ACE_TYPE:
+#if defined(__PS2__) || defined(__3DS__)
+                printf("Mask:0x%08lx ", ace->mask);
+#else
                 printf("Mask:0x%08x ", ace->mask);
+#endif
                 print_sid(ace->sid);
                 break;
         default:

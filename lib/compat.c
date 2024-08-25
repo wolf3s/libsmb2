@@ -123,20 +123,6 @@ time_t time(time_t *tloc)
         return sec;
 }
 
-int asprintf(char **strp, const char *fmt, ...)
-{
-        int len;
-        char *str;
-        va_list args;        
-
-        va_start(args, fmt);
-        str = malloc(256);
-        len = sprintf(str, fmt, args);
-        va_end(args);
-        *strp = str;
-        return len;
-}
-
 int errno;
 
 int iop_connect(int sockfd, struct sockaddr *addr, socklen_t addrlen)

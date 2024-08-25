@@ -14,7 +14,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #define _GNU_SOURCE
 
 #include <inttypes.h>
-#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER)
+#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER) && !defined(__PS2__) && !defined(GEKKO)
 #include <poll.h>
 #endif
 #include <stdint.h>
@@ -26,20 +26,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include "smb2.h"
 #include "libsmb2.h"
 #include "libsmb2-raw.h"
-
-#ifdef __AROS__
-#include "asprintf.h"
-#endif
-
-#if defined(__amigaos4__) || defined(__AMIGA__) || defined(__AROS__)
-struct pollfd {
-    int fd;
-    short events;
-    short revents;
-};
-
-int poll(struct pollfd* fds, unsigned int nfds, int timo);
-#endif
+#include "ex_compat.h"
 
 int is_finished;
 
@@ -63,8 +50,11 @@ void se_cb(struct smb2_context *smb2, int status,
                        strerror(-status), smb2_get_error(smb2));
                 exit(10);
         }
-
+#if defined(__PS2__) || defined(__3DS__)
+        printf("Number of shares:%ld\n", rep->ctr->ctr1.count);
+#else
         printf("Number of shares:%d\n", rep->ctr->ctr1.count);
+#endif
         for (i = 0; i < rep->ctr->ctr1.count; i++) {
                 printf("%-20s %-20s", rep->ctr->ctr1.array[i].name,
                        rep->ctr->ctr1.array[i].comment);

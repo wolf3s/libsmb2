@@ -14,7 +14,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #define _GNU_SOURCE
 
 #include <inttypes.h>
-#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER)
+#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER) && !defined(__PS2__) && !defined(GEKKO)
 #include <poll.h>
 #endif
 #include <stdint.h>
@@ -29,26 +29,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include "libsmb2-dcerpc.h"
 #include "libsmb2-dcerpc-lsa.h"
 
+#include "ex_compat.h"
+
 #ifndef discard_const
 #define discard_const(ptr) ((void *)((intptr_t)(ptr)))
 #endif
 
 int is_finished;
 struct ndr_context_handle PolicyHandle;
-
-#ifdef __AROS__
-#include "asprintf.h"
-#endif
-
-#if defined(__amigaos4__) || defined(__AMIGA__) || defined(__AROS__)
-struct pollfd {
-    int fd;
-    short events;
-    short revents;
-};
-
-int poll(struct pollfd* fds, unsigned int nfds, int timo);
-#endif
 
 int usage(void)
 {
@@ -69,9 +57,13 @@ void print_sid(RPC_SID *sid)
                 ia <<= 8;
                 ia |= sid->IdentifierAuthority[i];
         }
-        printf("%ld", ia);
+        printf("%lld", ia);
         for (i = 0; i < sid->SubAuthorityCount; i++) {
+#if defined(__PS2__) || defined(__3DS__)
+                printf("-%ld", sid->SubAuthority[i]);
+#else
                 printf("-%d", sid->SubAuthority[i]);
+#endif
         }
 }
 
@@ -105,17 +97,30 @@ void ls_cb(struct dcerpc_context *dce, int status,
         }
 
         printf("ReferencedDomains\n");
+#if defined(__PS2__) || defined(__3DS__)
+        printf("   Entries:%ld\n", rep->ReferencedDomains.Entries);
+        printf("   MaxEntries:%ld\n", rep->ReferencedDomains.MaxEntries);
+#else
         printf("   Entries:%d\n", rep->ReferencedDomains.Entries);
         printf("   MaxEntries:%d\n", rep->ReferencedDomains.MaxEntries);
+#endif
         for(i = 0; i < rep->ReferencedDomains.Entries; i++) {
                 printf("   Name:%s SID:", rep->ReferencedDomains.Domains[i].Name);
                 print_sid(&rep->ReferencedDomains.Domains[i].Sid);
                 printf("\n");
         }
         printf("TranslatedNames\n");
+#if defined(__PS2__) || defined(__3DS__)
+        printf("   Entries:%ld\n", rep->TranslatedNames.Entries);
+#else
         printf("   Entries:%d\n", rep->TranslatedNames.Entries);
+#endif
         for(i = 0; i < rep->TranslatedNames.Entries; i++) {
+#if defined(__PS2__) || defined(__3DS__)
+                printf("   Name:%s DomainIndex:%ld\n", rep->TranslatedNames.Names[i].Name, rep->TranslatedNames.Names[i].DomainIndex);
+#else
                 printf("   Name:%s DomainIndex:%d\n", rep->TranslatedNames.Names[i].Name, rep->TranslatedNames.Names[i].DomainIndex);
+#endif
         }
 
         memcpy(&cl_req.PolicyHandle, &PolicyHandle,

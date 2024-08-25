@@ -14,7 +14,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #define _GNU_SOURCE
 
 #include <inttypes.h>
-#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER)
+#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER) && !defined(__PS2__) && !defined(GEKKO)
 #include <poll.h>
 #endif
 #include <stdint.h>
@@ -29,19 +29,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 int is_finished;
 
-#ifdef __AROS__
-#include "asprintf.h"
-#endif
-
-#if defined(__amigaos4__) || defined(__AMIGA__) || defined(__AROS__)
-struct pollfd {
-    int fd;
-    short events;
-    short revents;
-};
-
-int poll(struct pollfd* fds, unsigned int nfds, int timo);
-#endif
+#include "ex_compat.h"
 
 int usage(void)
 {
@@ -82,7 +70,11 @@ void qd_3_cb(struct smb2_context *smb2, int status,
                 printf("ERROR: restarting the scan using SMB2_RESTART_SCAN broken\n");
                 exit(10);
         }
+#if defined(__PS2__) || defined(__3DS__)
+        printf("Index of first entry after restarting the scan at the second index: 0x%08lx\n", fs.file_index);
+#else
         printf("Index of first entry after restarting the scan at the second index: 0x%08x\n", fs.file_index);
+#endif
         printf("Name of first entry after restarting the scan at the second index %s\n", fs.name);
         if (strcmp(fs.name, data->name_2)) {
                  printf("ERROR: restarting the scan using SMB2_INDEX_SPECIFIED did not return the expected second entry.\n");
@@ -118,7 +110,11 @@ void qd_2_cb(struct smb2_context *smb2, int status,
                 printf("ERROR: restarting the scan using SMB2_RESTART_SCAN broken\n");
                 exit(10);
         }
+#if defined(__PS2__) || defined(__3DS__)
+        printf("Index of first entry after restarting the scan: 0x%08lx\n", fs.file_index);
+#else
         printf("Index of first entry after restarting the scan: 0x%08x\n", fs.file_index);
+#endif
         printf("Name of first entry after restarting the scan %s\n", fs.name);
         if (strcmp(fs.name, data->name_1)) {
                  printf("ERROR: restarting the scan using SMB2_RESTART_SCAN did not return the name of the first entry.\n");
@@ -172,8 +168,11 @@ void qd_1_cb(struct smb2_context *smb2, int status,
         data->name_1 = strdup(fs.name);
         data->index_1 = fs.file_index;
         printf("First file in directory: %s\n", data->name_1);
+#if defined(__PS2__) || defined(__3DS__)
+        printf("Index of first file in directory: 0x%08lx\n", fs.file_index);
+#else
         printf("Index of first file in directory: 0x%08x\n", fs.file_index);
-
+#endif
         offset += fs.next_entry_offset;
         tmp_vec.buf = &vec.buf[offset];
         tmp_vec.len = vec.len - offset;
@@ -184,7 +183,11 @@ void qd_1_cb(struct smb2_context *smb2, int status,
         data->name_2 = strdup(fs.name);
         data->index_2 = fs.file_index;
         printf("Second file in directory: %s\n", data->name_2);
+#if defined(__PS2__) || defined(__3DS__)
+        printf("Index of second file in directory: 0x%08lx\n", fs.file_index);
+#else
         printf("Index of second file in directory: 0x%08x\n", fs.file_index);
+#endif
         if (data->index_1 == data->index_2) {
                 printf("ERROR: broken server returns same file_index for first two entries in the directory\n");
                 printf("ERROR: This server does not support SMB2_INDEX_SPECIFIED queries\n");

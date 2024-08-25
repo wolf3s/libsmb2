@@ -192,10 +192,6 @@ struct pollfd {
 #define SOL_TCP IPPROTO_TCP
 #endif
 
-#ifdef _XBOX
-#define inline __inline 
-#endif
-
 #endif
 
 typedef SSIZE_T ssize_t;
@@ -455,7 +451,6 @@ char *strdup(const char *s);
 int random(void);
 void srandom(unsigned int seed);
 time_t time(time_t *tloc);
-int asprintf(char **strp, const char *fmt, ...);
 #endif
 int getlogin_r(char *buf, size_t size);
 

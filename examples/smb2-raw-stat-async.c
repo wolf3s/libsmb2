@@ -15,7 +15,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include <fcntl.h>
 #include <inttypes.h>
-#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER)
+#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER) && !defined(__PS2__) && !defined(GEKKO)
 #include <poll.h>
 #endif
 #include <stdint.h>
@@ -29,20 +29,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include "smb2.h"
 #include "libsmb2.h"
 #include "libsmb2-raw.h"
-
-#ifdef __AROS__
-#include "asprintf.h"
-#endif
-
-#if defined(__amigaos4__) || defined(__AMIGA__) || defined(__AROS__)
-struct pollfd {
-    int fd;
-    short events;
-    short revents;
-};
-
-int poll(struct pollfd* fds, unsigned int nfds, int timo);
-#endif
+#include "ex_compat.h"
 
 int usage(void)
 {
@@ -341,15 +328,22 @@ int main(int argc, char *argv[])
 
         printf("Allocation Size: %" PRIu64 "\n", fs->standard.allocation_size);
         printf("End Of File:     %" PRIu64 "\n", fs->standard.end_of_file);
+#if defined(__PS2__) || defined(__3DS__)
+        printf("Number Of Links: %ld\n", fs->standard.number_of_links);
+#else
         printf("Number Of Links: %d\n", fs->standard.number_of_links);
+#endif
         printf("Delete Pending:  %s\n", fs->standard.delete_pending ?
                "YES" : "NO");
         printf("Directory:       %s\n", fs->standard.directory ?
                "YES" : "NO");
 
         printf("Index Number: 0x%016" PRIx64 "\n", fs->index_number);
+#if defined(__PS2__) || defined(__3DS__)
+        printf("EA Size : %ld\n", fs->ea_size);
+#else
         printf("EA Size : %d\n", fs->ea_size);
-
+#endif
         printf("Access Flags: ");
         if (fs->standard.directory) {
                 if (fs->access_flags & SMB2_FILE_LIST_DIRECTORY) {
@@ -450,8 +444,11 @@ int main(int argc, char *argv[])
                 printf("DELETE_ON_CLOSE ");
         }
         printf("\n");
-
+#if defined(__PS2__) || defined(__3DS__)
+        printf("Alignment Requirement: %ld\n", fs->alignment_requirement);
+#else
         printf("Alignment Requirement: %d\n", fs->alignment_requirement);
+#endif
         printf("Name: %s\n", fs->name);
 
         smb2_free_data(smb2, fs);

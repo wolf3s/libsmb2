@@ -9,12 +9,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#ifdef _XBOX
-#define inline __inline
-#endif
-
-#ifndef _XBOX
-#ifndef _vscprintf
+#if !defined(_vscprintf) && !defined(_XBOX)
 /* For some reason, MSVC fails to honour this #ifndef. */
 /* Hence function renamed to _vscprintf_so(). */
 static inline int _vscprintf_so(const char * format, va_list pargs) {
@@ -26,7 +21,6 @@ static inline int _vscprintf_so(const char * format, va_list pargs) {
   return retval;
 }
 #endif /* _vscprintf */
-#endif
 
 #ifndef vasprintf
 static inline int vasprintf(char **strp, const char *fmt, va_list ap) {
@@ -52,13 +46,33 @@ static inline int vasprintf(char **strp, const char *fmt, va_list ap) {
 #endif /* vasprintf */
 
 #ifndef asprintf
+#ifdef _IOP
+int asprintf(char **strp, const char *fmt, ...)
+#else
 static inline int asprintf(char *strp[], const char *fmt, ...) {
+#endif
+#ifdef _IOP
+  int len;
+  char *str;
+#else
   int r;
-  va_list ap;
-  va_start(ap, fmt);
-  r = vasprintf(strp, fmt, ap);
-  va_end(ap);
+#endif
+  va_list args;
+  va_start(args, fmt);
+#ifdef _IOP
+  str = malloc(256);
+  len = sprintf(str, fmt, args);
+#else
+  r = vasprintf(strp, fmt, args);
+#endif
+  va_end(args);
+
+#ifdef _IOP
+  *strp = str;
+  return len;
+#else
   return r;
+#endif
 }
 #endif /* asprintf */
 

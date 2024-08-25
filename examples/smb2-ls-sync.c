@@ -14,7 +14,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #define _GNU_SOURCE
 
 #include <inttypes.h>
-#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER)
+#if !defined(__amigaos4__) && !defined(__AMIGA__) && !defined(__AROS__) && !defined(_MSC_VER) && !defined(__PS2__) && !defined(GEKKO)
 #include <poll.h>
 #endif
 #include <stdint.h>
@@ -22,25 +22,20 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#ifdef PICO_PLATFORM
+#include "picow/pico_main.h"
+#endif
+
 
 #include "smb2.h"
 #include "libsmb2.h"
 #include "libsmb2-raw.h"
 
-#if defined(__AROS__) || defined(_MSC_VER)
+#if defined(__AROS__) || defined(_MSC_VER) || defined(_IOP)
 #include "asprintf.h"
 #endif
 
-#if defined(__amigaos4__) || defined(__AMIGA__) || defined(__AROS__)
-struct pollfd {
-    int fd;
-    short events;
-    short revents;
-};
-
-int poll(struct pollfd* fds, unsigned int nfds, int timo);
-#endif
-
+#ifndef PICO_PLATFORM
 int usage(void)
 {
         fprintf(stderr, "Usage:\n"
@@ -49,14 +44,23 @@ int usage(void)
                 "smb://[<domain;][<username>@]<host>[:<port>]/<share>/<path>\n");
         exit(1);
 }
+#endif
 
-int main(int argc, char *argv[])
+#ifdef PICO_PLATFORM
+void smb2_ls_sync(char* user_url)
+#else
+void smb2_ls_sync(int argc, char *argv[])
+#endif
 {
         struct smb2_context *smb2;
         struct smb2_url *url;
         struct smb2dir *dir;
         struct smb2dirent *ent;
+#ifdef PICO_PLATFORM
+        char link[1024];
+#else
         char *link;
+#endif
 
         if (argc < 2) {
                 usage();
@@ -64,14 +68,23 @@ int main(int argc, char *argv[])
 
 	smb2 = smb2_init_context();
         if (smb2 == NULL) {
+#ifdef PICO_PLATFORM
+                printf("Failed to init context\n");
+#else
                 fprintf(stderr, "Failed to init context\n");
+#endif
                 exit(0);
         }
 
         url = smb2_parse_url(smb2, argv[1]);
         if (url == NULL) {
+#ifdef PICO_PLATFORM
+                printf("Failed to parse url: %s\n",
+                        smb2_get_error(smb2));
+#else
                 fprintf(stderr, "Failed to parse url: %s\n",
                         smb2_get_error(smb2));
+#endif
                 exit(0);
         }
 
@@ -111,9 +124,17 @@ int main(int argc, char *argv[])
                         char buf[256];
 
                         if (url->path && url->path[0]) {
+#ifdef PICO_PLATFORM
+                                sprintf(link, "%s/%s", url->path, ent->name);
+#else
                                 asprintf(&link, "%s/%s", url->path, ent->name);
+#endif
                         } else {
+#ifdef PICO_PLATFORM
+                                sprintf(link, "%s", ent->name);
+#else
                                 asprintf(&link, "%s", ent->name);
+#endif
                         }
                         smb2_readlink(smb2, link, buf, 256);
                         printf("    -> [%s]\n", buf);
@@ -125,6 +146,20 @@ int main(int argc, char *argv[])
         smb2_disconnect_share(smb2);
         smb2_destroy_url(url);
         smb2_destroy_context(smb2);
+}
+
+#ifdef PICO_PLATFORM
+int main(void)
+#else
+int main(int argc, char *argv[])
+#endif
+{
+#ifdef PICO_PLATFORM
+        main_task(NULL);
+        pico_init_main();
+#else
+        smb2_ls_sync(argc, argv);
+#endif
         
 	return 0;
 }
