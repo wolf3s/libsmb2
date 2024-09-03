@@ -111,9 +111,6 @@ elseif(IOP AND BUILD_IRX)
             timestamps.c
             unicode.c
 	    usha.c)
-
-BUILD_IOP_IMPORTS(${CMAKE_CURRENT_SOURCE_DIR}/ps2/imports.c ${CMAKE_CURRENT_SOURCE_DIR}/ps2/imports.lst)
-
 else()
   set(SOURCES aes.c
             aes128ccm.c
@@ -185,7 +182,20 @@ set_target_properties(smb2_rpc PROPERTIES
                            VERSION ${PROJECT_VERSION}
                            SOVERSION ${SOVERSION})                           
 elseif(IOP AND BUILD_IRX)
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/ps2/imports.c
+    COMMAND BUILD_IOP_IMPORTS ${CMAKE_CURRENT_SOURCE_DIR}/ps2/imports.c ${CMAKE_CURRENT_SOURCE_DIR}/ps2/imports.lst
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ps2/imports.lst
+    COMMENT "Generating imports.c from imports.lst"
+)
+
+add_custom_target(generate_imports_c ALL
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ps2/imports.c
+)
+
 add_executable(smb2man.irx ${SOURCES})
+
+add_dependencies(smb2man.irx generate_imports_c)
 
 target_link_libraries(smb2man.irx
 	PRIVATE
